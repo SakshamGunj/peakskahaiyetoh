@@ -1,0 +1,17 @@
+{
+  "name": "restaurant-slot-machine",
+  "version": "1.0.0",
+  "description": "Restaurant-themed slot machine game with user rewards system",
+  "private": true,
+  "scripts": {
+    "start": "serve",
+    "build": "echo 'No build required'"
+  },
+  "dependencies": {
+    "serve": "^14.0.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

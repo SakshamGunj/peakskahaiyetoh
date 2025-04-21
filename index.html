@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Slot Machine Game</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <div id="loading" class="loading-screen">
+            <div class="loading-spinner"></div>
+            <p>Loading Restaurant...</p>
+        </div>
+
+        <!-- Add welcome screen -->
+        <div id="welcomeScreen" class="welcome-screen hidden">
+            <div class="welcome-content">
+                <h1 id="welcomeRestaurantName">Restaurant Name</h1>
+                <p id="welcomeRestaurantDescription">Restaurant Description</p>
+                
+                <div class="welcome-buttons">
+                    <button id="spinButton" class="welcome-btn spin-welcome-btn">Spin & Win</button>
+                    <button id="menuButton" class="welcome-btn menu-welcome-btn">View Menu</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="mainContent" class="hidden">
+            <header>
+                <div id="restaurantInfo">
+                    <h1 id="restaurantName">Restaurant Name</h1>
+                    <p id="restaurantDescription">Restaurant Description</p>
+                </div>
+                <div class="auth-container">
+                    <button id="dashboardBtn" class="hidden">My Rewards</button>
+                    <button id="loginBtn">Login</button>
+                    <button id="logoutBtn" class="hidden">Logout</button>
+                </div>
+            </header>
+
+            <main>
+                <div class="game-container">
+                    <h2>Spin & Win Delicious Rewards!</h2>
+                    
+                    <!-- Add spin stats display -->
+                    <div class="spin-stats">
+                        <div class="spin-stat">
+                            <span class="stat-label">Daily Spins:</span>
+                            <span id="dailySpinsCount" class="stat-value">0/3</span>
+                        </div>
+                        <div class="spin-stat">
+                            <span class="stat-label">Total Points:</span>
+                            <span id="totalPointsValue" class="stat-value">0</span>
+                        </div>
+                    </div>
+                    
+                    <div id="spinLimitMessage" class="spin-limit-message hidden">
+                        <p>You've reached your daily spin limit. Come back tomorrow!</p>
+                    </div>
+                    
+                    <div class="slot-machine">
+                        <div class="slot-window">
+                            <div id="slotItems" class="slot-items"></div>
+                        </div>
+                    </div>
+                    <button id="spinBtn" class="spin-button">SPIN</button>
+                    <div id="result" class="result"></div>
+                </div>
+            </main>
+
+            <!-- User Dashboard - enhanced with spin stats section -->
+            <div id="dashboard" class="dashboard hidden">
+                <div class="dashboard-header">
+                    <h2>My Rewards Dashboard</h2>
+                    <button id="closeDashboard" class="close-btn">✕</button>
+                </div>
+                <div class="dashboard-content">
+                    <div id="userInfo" class="user-info">
+                        <h3>Welcome, <span id="userName">User</span>!</h3>
+                        
+                        <!-- Add spin stats summary section -->
+                        <div class="dashboard-stats">
+                            <div class="stats-card">
+                                <h4>Your Spin Stats</h4>
+                                <div class="stat-row">
+                                    <span>Daily Spins:</span>
+                                    <span><span id="dashboardSpinCount">0</span>/<span id="dashboardSpinLimit">3</span></span>
+                                </div>
+                                <div class="stat-row">
+                                    <span>Total Points:</span>
+                                    <span id="dashboardTotalPoints">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <p>Here are all your claimed rewards:</p>
+                    </div>
+                    <div id="rewardsList" class="rewards-list">
+                        <!-- Rewards will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Login/Signup Modal -->
+            <div id="authModal" class="modal hidden">
+                <div class="modal-content">
+                    <span class="close-modal">&times;</span>
+                    <div class="tabs">
+                        <button id="loginTab" class="tab active">Login</button>
+                        <button id="signupTab" class="tab">Sign Up</button>
+                    </div>
+                    <div id="loginForm" class="auth-form">
+                        <input type="email" id="loginEmail" placeholder="Email" required>
+                        <input type="password" id="loginPassword" placeholder="Password" required>
+                        <button id="loginSubmit" class="submit-btn">Login</button>
+                    </div>
+                    <div id="signupForm" class="auth-form hidden">
+                        <input type="text" id="signupName" placeholder="Full Name" required>
+                        <input type="email" id="signupEmail" placeholder="Email" required>
+                        <input type="password" id="signupPassword" placeholder="Password" required>
+                        <input type="tel" id="signupPhone" placeholder="Phone Number" required>
+                        <button id="signupSubmit" class="submit-btn">Sign Up</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Claim Reward Modal -->
+            <div id="rewardModal" class="modal hidden">
+                <div class="modal-content reward-modal">
+                    <span class="close-modal">&times;</span>
+                    <h2>Congratulations!</h2>
+                    <div id="winningOffer" class="winning-offer">
+                        <p>You won: <span id="offerText"></span></p>
+                    </div>
+                    <div class="buttons">
+                        <button id="claimBtn" class="primary-btn">Claim Reward</button>
+                        <button id="spinAgainBtn" class="secondary-btn">Spin Again</button>
+                    </div>
+                    <div id="couponCode" class="coupon-code hidden">
+                        <h3>Your Coupon Code</h3>
+                        <div class="code" id="couponValue">ABC123XYZ</div>
+                        <p>Show this code to claim your reward!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize global Firebase mock
+        window.firebaseAuth = {
+            signInWithEmailAndPassword: function(email, password) {
+                return new Promise((resolve, reject) => {
+                    // Check in localStorage for user
+                    const users = JSON.parse(localStorage.getItem('users') || '{}');
+                    const user = users[email];
+                    
+                    if (user && user.password === password) {
+                        resolve({ 
+                            user: { 
+                                uid: user.uid || email.replace(/[^a-z0-9]/gi, ''),
+                                email: email,
+                                displayName: user.name
+                            } 
+                        });
+                    } else {
+                        reject(new Error('Invalid email or password'));
+                    }
+                });
+            },
+            createUserWithEmailAndPassword: function(email, password) {
+                return new Promise((resolve, reject) => {
+                    // Check if user exists
+                    const users = JSON.parse(localStorage.getItem('users') || '{}');
+                    
+                    if (users[email]) {
+                        reject(new Error('User already exists'));
+                        return;
+                    }
+                    
+                    // Create user ID
+                    const uid = 'user_' + Date.now() + Math.random().toString(36).substring(2, 9);
+                    
+                    resolve({ 
+                        user: { 
+                            uid: uid,
+                            email: email,
+                            displayName: null,
+                            updateProfile: function(data) {
+                                return Promise.resolve();
+                            }
+                        } 
+                    });
+                    
+                    // Don't actually store the user here - that happens in app.js
+                });
+            },
+            onAuthStateChanged: function(callback) {
+                // Get current user from localStorage
+                const currentUser = localStorage.getItem('currentUser');
+                if (currentUser) {
+                    try {
+                        const user = JSON.parse(currentUser);
+                        callback({ 
+                            uid: user.uid,
+                            email: user.email,
+                            displayName: user.name
+                        });
+                    } catch (e) {
+                        callback(null);
+                    }
+                } else {
+                    callback(null);
+                }
+                return function() {}; // Unsubscribe function
+            },
+            signOut: function() {
+                return Promise.resolve();
+            }
+        };
+        console.log("Firebase authentication mock initialized");
+    </script>
+    
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+{
+  "version": 2,
+  "public": true,
+  "buildCommand": null,
+  "outputDirectory": ".",
+  "routes": [
+    {
+      "src": "/styles\\.css",
+      "dest": "/styles.css"
+    },
+    {
+      "src": "/app\\.js",
+      "dest": "/app.js"
+    },
+    {
+      "src": "/(.*\\.(jpg|jpeg|png|gif|svg|ico))",
+      "dest": "/$1"
+    },
+    {
+      "src": "/awesome-burgers",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/pizza-palace",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/peakskitchen",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/sushi-heaven",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}
