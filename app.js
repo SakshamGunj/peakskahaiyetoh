@@ -65,13 +65,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Initialize application based on current URL
 function initApp() {
+    // Set default restaurant to "peakskitchen"
+    const defaultRestaurantId = "peakskitchen";
+    
+    // Extract restaurant ID from URL - support both direct paths and hash-based routes
     const path = window.location.pathname;
-    const hash = window.location.hash.substring(2);
+    const hash = window.location.hash.substring(2); // Remove the #/ prefix
     let restaurantId = '';
     
     if (hash && RESTAURANTS[hash]) {
+        // Hash-based routing: /#/restaurant-id
         restaurantId = hash;
     } else {
+        // Direct path routing: /restaurant-id
+        // Extract the last segment of the path and remove any trailing slash
         const pathSegments = path.split('/').filter(segment => segment.length > 0);
         const lastSegment = pathSegments.length > 0 ? pathSegments[pathSegments.length - 1] : '';
         
@@ -80,25 +87,33 @@ function initApp() {
         }
     }
     
+    console.log("Path:", path);
+    console.log("Hash:", hash);
+    console.log("Resolved Restaurant ID:", restaurantId);
+    
     if (restaurantId && RESTAURANTS[restaurantId]) {
         APP_STATE.currentRestaurant = {
             id: restaurantId,
             ...RESTAURANTS[restaurantId]
         };
-        loadRestaurantData();
     } else {
-        const firstRestaurantId = Object.keys(RESTAURANTS)[0];
+        // Default to peakskitchen
         APP_STATE.currentRestaurant = {
-            id: firstRestaurantId,
-            ...RESTAURANTS[firstRestaurantId]
+            id: defaultRestaurantId,
+            ...RESTAURANTS[defaultRestaurantId]
         };
         
-        const newPath = `#/${firstRestaurantId}`;
+        // Update URL for proper routing
+        const newPath = `#/${defaultRestaurantId}`;
         window.history.pushState({}, '', newPath);
-        loadRestaurantData();
     }
     
+    loadRestaurantData();
+    
+    // Check if user is already logged in
     checkLoginStatus();
+    
+    // Set up dashboard
     setupDashboard();
 }
 
@@ -177,9 +192,10 @@ function setupEventListeners() {
         });
     }
     
+    // Update the menu button to ensure it routes to peakskitchen
     if ($('#menuButton')) {
         $('#menuButton').addEventListener('click', () => {
-            const restaurantId = APP_STATE.currentRestaurant?.id || 'awesome-burgers';
+            const restaurantId = APP_STATE.currentRestaurant?.id || 'peakskitchen';
             window.location.href = `menu.html?restaurant=${restaurantId}`;
         });
     }

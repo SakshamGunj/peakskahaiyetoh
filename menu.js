@@ -1,5 +1,27 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    // Get restaurant ID from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    let restaurantId = urlParams.get('restaurant');
+    
+    // If no restaurant in URL params, check hash
+    if (!restaurantId) {
+        const hash = window.location.hash.substring(2); // Remove the #/ prefix
+        if (hash) {
+            restaurantId = hash;
+        }
+    }
+    
+    // Default to peakskitchen if no restaurant ID found
+    if (!restaurantId) {
+        restaurantId = 'peakskitchen';
+    }
+    
+    console.log(`Loading menu for restaurant: ${restaurantId}`);
+    
+    // Load the restaurant menu (assuming you have a function for this)
+    loadRestaurantMenu(restaurantId);
+
     const categoryNav = document.getElementById('category-nav');
     const mainContent = document.querySelector('.main-content'); // Use main content area
 
@@ -153,3 +175,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 }); // End DOMContentLoaded
+
+// This function would be specific to your menu.html implementation
+function loadRestaurantMenu(restaurantId) {
+    // Set restaurant name and description in the menu page
+    const restaurantName = document.getElementById('restaurantName');
+    const restaurantDesc = document.getElementById('restaurantDescription');
+    
+    if (restaurantName && restaurantDesc) {
+        // Set to Peaks Kitchen if available
+        if (restaurantId === 'peakskitchen') {
+            restaurantName.textContent = "Peaks Kitchen";
+            restaurantDesc.textContent = "Experience the authentic taste of Italy with our hand-tossed pizzas, baked in wood-fired ovens and topped with premium ingredients.";
+        } else {
+            // Handle other restaurants or fallback to Peaks Kitchen
+            restaurantName.textContent = "Peaks Kitchen";
+            restaurantDesc.textContent = "Experience the authentic taste of Italy with our hand-tossed pizzas, baked in wood-fired ovens and topped with premium ingredients.";
+        }
+    }
+    
+    // Load menu items specific to this restaurant
+    // This part would depend on your menu.html structure
+}
