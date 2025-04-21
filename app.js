@@ -192,11 +192,16 @@ function setupEventListeners() {
         });
     }
     
-    // Update the menu button to ensure it routes to peakskitchen
+    // Fix menu button navigation for Vercel deployment
     if ($('#menuButton')) {
         $('#menuButton').addEventListener('click', () => {
             const restaurantId = APP_STATE.currentRestaurant?.id || 'peakskitchen';
-            window.location.href = `menu.html?restaurant=${restaurantId}`;
+            
+            // Check if we're on Vercel or another deployment
+            const baseUrl = window.location.origin;
+            
+            // Navigate to menu.html with proper parameters
+            window.location.href = `${baseUrl}/menu.html#/${restaurantId}`;
         });
     }
 }

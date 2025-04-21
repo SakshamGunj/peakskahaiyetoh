@@ -5,6 +5,10 @@
   "outputDirectory": ".",
   "routes": [
     {
+      "src": "/menu.html",
+      "dest": "/menu.html"
+    },
+    {
       "src": "/styles\\.css",
       "dest": "/styles.css"
     },
@@ -17,15 +21,15 @@
       "dest": "/$1"
     },
     {
+      "src": "/peakskitchen",
+      "dest": "/index.html"
+    },
+    {
       "src": "/awesome-burgers",
       "dest": "/index.html"
     },
     {
       "src": "/pizza-palace",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/peakskitchen",
       "dest": "/index.html"
     },
     {
