@@ -11,6 +11,7 @@ const SPIN_SPEED = 100; // Speed between slot items change in ms
 const SLOT_ITEM_HEIGHT = 184; // Height of each slot item in pixels
 const DAILY_SPIN_LIMIT = 3;
 const SPIN_STORAGE_KEY = 'dailySpinData';
+const USER_SPINS_STORAGE_KEY = 'userSpinsData'; // New storage key for user spins
 
 // State management
 const APP_STATE = {
@@ -372,19 +373,68 @@ function updateSpinStatsUI() {
     }
 }
 
-// Add helper functions for spin data management
+// Update spin data management functions to handle user-specific data
 function getSpinData() {
-    const data = JSON.parse(localStorage.getItem(SPIN_STORAGE_KEY) || '{}');
+    // Get the current restaurant ID
+    const restaurantId = APP_STATE.currentRestaurant?.id || 'default';
+    
+    // Get today's date string
     const today = getTodayDateStr();
-    if (!data.date || data.date !== today) {
-        return { date: today, count: 0, totalPoints: data.totalPoints || 0 };
+    
+    // Try to get user-specific spin data first (if user is logged in)
+    const userId = APP_STATE.currentUser?.uid || 'anonymous';
+    
+    // First check if we have data in the persistent user spins storage
+    const allUserSpinsData = JSON.parse(localStorage.getItem(USER_SPINS_STORAGE_KEY) || '{}');
+    
+    // Check if we have data for this user and restaurant combination
+    if (allUserSpinsData[userId] && 
+        allUserSpinsData[userId][restaurantId] && 
+        allUserSpinsData[userId][restaurantId].date === today) {
+        // Return user's restaurant-specific data for today
+        return allUserSpinsData[userId][restaurantId];
     }
-    return data;
+    
+    // If no user-specific data or not for today, check general spin data
+    const generalData = JSON.parse(localStorage.getItem(SPIN_STORAGE_KEY) || '{}');
+    if (!generalData.date || generalData.date !== today) {
+        // If general data isn't from today, return fresh data
+        return { date: today, count: 0, totalPoints: generalData.totalPoints || 0 };
+    }
+    
+    // Return the general data
+    return generalData;
 }
 
 function setSpinData(count, totalPoints) {
+    // Get the current restaurant ID
+    const restaurantId = APP_STATE.currentRestaurant?.id || 'default';
+    
+    // Get today's date string
     const today = getTodayDateStr();
-    localStorage.setItem(SPIN_STORAGE_KEY, JSON.stringify({ date: today, count, totalPoints }));
+    
+    // Create the spin data object
+    const spinData = { date: today, count, totalPoints };
+    
+    // Save to general storage
+    localStorage.setItem(SPIN_STORAGE_KEY, JSON.stringify(spinData));
+    
+    // Also save to user-specific storage
+    const userId = APP_STATE.currentUser?.uid || 'anonymous';
+    const allUserSpinsData = JSON.parse(localStorage.getItem(USER_SPINS_STORAGE_KEY) || '{}');
+    
+    // Initialize nested objects if they don't exist
+    if (!allUserSpinsData[userId]) {
+        allUserSpinsData[userId] = {};
+    }
+    
+    // Store the spin data for this user and restaurant
+    allUserSpinsData[userId][restaurantId] = spinData;
+    
+    // Save back to localStorage
+    localStorage.setItem(USER_SPINS_STORAGE_KEY, JSON.stringify(allUserSpinsData));
+    
+    console.log(`📊 Spin data updated for user ${userId}, restaurant ${restaurantId}: ${count}/${DAILY_SPIN_LIMIT}`);
 }
 
 function getTodayDateStr() {
@@ -412,19 +462,19 @@ function setupEventListeners() {
         $('#welcomeScreen').classList.add('hidden');
         $('#mainContent').classList.remove('hidden');
         
-        // Make API request to localhost:8000 when spin button is clicked
-        fetch('http://localhost:8000/')
+        // Update API endpoint from localhost:8000 to the new server
+        fetch('http://35.200.227.36:8069/')
             .then(response => {
                 console.log('🌐 API Response Status:', response.status, response.statusText);
                 return response.text();
             })
             .then(data => {
-                console.log('🌐 API Response from localhost:8000:');
+                console.log('🌐 API Response from API server:');
                 console.log(data.substring(0, 500) + (data.length > 500 ? '...' : ''));
             })
             .catch(error => {
-                console.error('🌐 API Error from localhost:8000:', error);
-                console.log('Make sure your backend server is running at http://localhost:8000');
+                console.error('🌐 API Error from API server:', error);
+                console.log('Make sure your backend server is running');
             });
     });
     
@@ -538,42 +588,35 @@ function handleLogin(e) {
     });
 }
 
-// Fix the handleLogout function to work without Firebase dependency
+// Fix the handleLogout function to preserve spin data
 function handleLogout() {
-    try {
-        // Clear user state
-        APP_STATE.currentUser = null;
-        
-        // Remove stored user data
-        localStorage.removeItem('currentUser');
-        
-        // Reset spin data to ensure a fresh start for the next user
-        localStorage.removeItem(SPIN_STORAGE_KEY);
-        
-        // Update UI for logged out state
-        $('#loginBtn').classList.remove('hidden');
-        $('#logoutBtn').classList.add('hidden');
-        $('#dashboardBtn').classList.add('hidden');
-        
-        // Reset spin stats UI with fresh data
-        const freshData = { date: getTodayDateStr(), count: 0, totalPoints: 0 };
-        setSpinData(freshData.count, freshData.totalPoints);
-        updateSpinStatsUI();
-        
-        // Close any open modals including dashboard
-        closeAllModals();
-        
-        // Show logout message
-        $('#result').textContent = 'You have been logged out';
-        setTimeout(() => {
-            $('#result').textContent = '';
-        }, 3000);
-        
-        console.log('✅ Logout successful');
-    } catch (error) {
-        console.error("❌ Logout error:", error);
-        alert("Logout failed: " + error.message);
-    }
+    // Store the current user ID before logging out
+    const userId = APP_STATE.currentUser?.uid;
+    
+    // Clear user state
+    APP_STATE.currentUser = null;
+    
+    // Remove stored user data but NOT the spin data
+    localStorage.removeItem('currentUser');
+    
+    // Update UI for logged out state
+    $('#loginBtn').classList.remove('hidden');
+    $('#logoutBtn').classList.add('hidden');
+    $('#dashboardBtn').classList.add('hidden');
+    
+    // Update UI with current spin data (which is now preserved)
+    updateSpinStatsUI();
+    
+    // Close any open modals including dashboard
+    closeAllModals();
+    
+    // Show logout message
+    $('#result').textContent = 'You have been logged out';
+    setTimeout(() => {
+        $('#result').textContent = '';
+    }, 3000);
+    
+    console.log(`✅ User logged out. Spin data preserved.`);
 }
 
 // Fix showClaimForm to ensure proper reward claiming flow
@@ -668,7 +711,7 @@ function closeDashboard() {
     }, 400);
 }
 
-// Add missing loginUser function that was referenced but not defined
+// Update loginUser function to restore user spin data
 function loginUser(user) {
     APP_STATE.currentUser = user;
     localStorage.setItem('currentUser', JSON.stringify(user));
@@ -678,11 +721,16 @@ function loginUser(user) {
     $('#logoutBtn').classList.remove('hidden');
     $('#dashboardBtn').classList.remove('hidden');
     
+    // Restore user's spin data if available
+    updateSpinStatsUI();
+    
     // Show welcome message
     $('#result').textContent = `Welcome, ${user.name}!`;
     setTimeout(() => {
         $('#result').textContent = '';
     }, 3000);
+    
+    console.log(`✅ User logged in: ${user.email}`);
 }
 
 // Add missing openAuthModal and handleLogout functions 

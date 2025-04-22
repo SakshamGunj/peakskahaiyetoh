@@ -2,8 +2,8 @@
  * API Client for Restaurant Slot Machine Game
  */
 
-// Base API URL
-const API_BASE_URL = 'http://localhost:8000';
+// Update the Base API URL to the new endpoint
+const API_BASE_URL = 'http://35.200.227.36:8069';
 
 // API client for making requests to the backend
 const ApiClient = {
@@ -166,10 +166,11 @@ const ApiClient = {
         verifyToken: async (token) => {
             try {
                 // Improve the token payload format based on the error
+                console.log(token)
                 const tokenPayload = {token};
                 console.log('🔑 Verifying token:', tokenPayload);
                 
-                return await ApiClient.request('/api/auth/verify-token', 'POST', tokenPayload);
+                return await ApiClient.request('/api/auth/verify-token', 'POST', token);
             } catch (error) {
                 // Provide more detailed error information
                 console.error('🔑 Token verification error details:', error);
