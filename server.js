@@ -1,130 +1,79 @@
 /**
- * Restaurant Slot Machine - Production Server
- * This server implements proper routing and optimization for the slot machine application
+ * Restaurant Slot Machine - Simple Express Server
  */
 
 const express = require('express');
 const path = require('path');
-const compression = require('compression');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const fs = require('fs');
-const cors = require('cors');
 const config = require('./config');
 
 // Initialize Express app
 const app = express();
-const PORT = config.server.port;
+const PORT = config.server.port || 3000;
 
-// Ensure logs directory exists
-if (!fs.existsSync(config.paths.logs)) {
-  fs.mkdirSync(config.paths.logs, { recursive: true });
-}
-
-// Create a write stream for access logs
-const accessLogStream = fs.createWriteStream(
-  path.join(config.paths.logs, 'access.log'), 
-  { flags: 'a' }
-);
-
-// CORS configuration
-app.use(cors(config.cors));
-
-// Security middleware
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-      fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-      imgSrc: ["'self'", 'data:'],
-    },
-  },
-  frameguard: false
-}));
-
-// Performance middleware
-app.use(compression());
-
-// Logging middleware
-app.use(morgan(config.server.isProduction ? 'combined' : 'dev', { 
-  stream: config.server.isProduction ? accessLogStream : process.stdout
-}));
-
-// Parse JSON and URL-encoded data
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Serve static files with cache control
-app.use(express.static(config.paths.static, {
-  maxAge: config.cache.staticMaxAge,
-  setHeaders: (res, path) => {
-    if (path.endsWith('.html')) {
-      res.setHeader('Cache-Control', `max-age=${config.cache.htmlMaxAge}`);
-    }
-  }
-}));
-
-// Domain-specific routing
+// Add request logging middleware
 app.use((req, res, next) => {
-  // Check for subdomain or domain-based routing
-  const hostname = req.hostname;
+  const start = Date.now();
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   
-  // Find if we're on a restaurant-specific domain
-  for (const [id, domain] of Object.entries(config.restaurants.domains)) {
-    if (hostname === domain) {
-      // Rewrite the URL to include the restaurant ID
-      req.url = `/${id}${req.url === '/' ? '' : req.url}`;
-      break;
-    }
-  }
+  // Log request headers
+  console.log('Request Headers:', JSON.stringify(req.headers, null, 2));
+  
+  // Capture the original end method
+  const originalEnd = res.end;
+  
+  // Override the end method to log response details
+  res.end = function() {
+    const duration = Date.now() - start;
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - ${res.statusCode} (${duration}ms)`);
+    console.log('Response Headers:', JSON.stringify(res.getHeaders(), null, 2));
+    
+    // Call the original end method
+    return originalEnd.apply(this, arguments);
+  };
   
   next();
 });
 
-// Handle SPA routing - serve index.html for all routes
-app.get('/*', (req, res) => {
-  res.sendFile(path.join(config.paths.static, 'index.html'));
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
+// Simple CORS middleware
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   
-  // Log error
-  fs.appendFile(
-    path.join(config.paths.logs, 'error.log'),
-    `${new Date().toISOString()} - ${err.stack}\n`,
-    (fsErr) => {
-      if (fsErr) console.error('Failed to write to error log', fsErr);
-    }
+  // Explicitly remove any CSP headers that might be set elsewhere
+  res.removeHeader('Content-Security-Policy');
+  res.removeHeader('Content-Security-Policy-Report-Only');
+  
+  // Set a permissive CSP header that allows everything
+  res.header(
+    "Content-Security-Policy", 
+    "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;"
   );
   
-  res.status(500).send(config.server.isProduction ? 'Something went wrong!' : err.stack);
+  next();
+});
+
+// Parse JSON requests
+app.use(express.json());
+
+// Log request body for POST/PUT requests
+app.use((req, res, next) => {
+  if (req.method === 'POST' || req.method === 'PUT') {
+    console.log('Request Body:', JSON.stringify(req.body, null, 2));
+  }
+  next();
+});
+
+// Serve static files
+app.use(express.static(path.join(__dirname)));
+
+// Handle SPA routing - serve index.html for all routes
+app.get('/*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // Start server
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running in ${config.server.nodeEnv} mode on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`);
   console.log(`Visit http://localhost:${PORT} to view the application`);
+  console.log(`Visit http://localhost:${PORT}/api-test.html to run API tests`);
 });
-
-// Handle graceful shutdown
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
-
-function shutdown() {
-  console.log('Graceful shutdown initiated...');
-  // Close server connections
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
-  });
-  
-  // Force shutdown after 10s if server hasn't closed
-  setTimeout(() => {
-    console.error('Forced shutdown after timeout');
-    process.exit(1);
-  }, 10000);
-}

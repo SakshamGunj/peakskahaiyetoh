@@ -5,7 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restaurant Slot Machine Game</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/dashboard-styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyALZiqfQXlCGqRCI_NN3127oZhIkFd6unk",
+            authDomain: "spinthewheel-e14a6.firebaseapp.com",
+            projectId: "spinthewheel-e14a6",
+            storageBucket: "spinthewheel-e14a6.appspot.com",
+            messagingSenderId: "186691676465",
+            appId: "1:186691676465:web:a67ad5afc60424d586e810",
+            measurementId: "G-SC1JQLBXHY"
+        };
+
+        // Initialize Firebase
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                firebase.initializeApp(firebaseConfig);
+                console.log("Firebase initialized successfully");
+            } catch (e) {
+                console.error("Firebase initialization error:", e);
+            }
+        });
+    </script>
 </head>
 <body>
     <div id="app">
@@ -70,7 +98,7 @@
                 </div>
             </main>
 
-            <!-- User Dashboard - enhanced with spin stats section -->
+            <!-- User Dashboard with restaurant tabs -->
             <div id="dashboard" class="dashboard hidden">
                 <div class="dashboard-header">
                     <h2>My Rewards Dashboard</h2>
@@ -79,8 +107,13 @@
                 <div class="dashboard-content">
                     <div id="userInfo" class="user-info">
                         <h3>Welcome, <span id="userName">User</span>!</h3>
-                        
-                        <!-- Add spin stats summary section -->
+                        <div id="userPhoneContainer">
+                            <span>Mobile: <span id="userPhone"></span></span>
+                        </div>
+                        <div class="dashboard-actions">
+                            <button id="editProfileBtn">Edit Profile</button>
+                            <button id="logoutBtnDashboard">Log Out</button>
+                        </div>
                         <div class="dashboard-stats">
                             <div class="stats-card">
                                 <h4>Your Spin Stats</h4>
@@ -95,11 +128,35 @@
                             </div>
                         </div>
                         
-                        <p>Here are all your claimed rewards:</p>
+                        <!-- Restaurant tabs navigation -->
+                        <div id="restaurantTabs" class="restaurant-tabs">
+                            <!-- Tabs will be generated here -->
+                        </div>
                     </div>
                     <div id="rewardsList" class="rewards-list">
                         <!-- Rewards will be populated here -->
                     </div>
+                </div>
+            </div>
+
+            <!-- Optimized Edit Profile Modal -->
+            <div id="editProfileModal" class="modal hidden">
+                <div class="modal-content" style="max-width: 350px; margin: 60px auto; padding: 24px 20px;">
+                    <h2 style="margin-bottom: 18px; text-align:center;">Edit Profile</h2>
+                    <form id="editProfileForm" autocomplete="off">
+                        <div class="form-group" style="margin-bottom: 14px;">
+                            <label for="editName" style="display:block; margin-bottom:4px;">Name</label>
+                            <input id="editName" type="text" required maxlength="40" style="width:100%;padding:8px;">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 18px;">
+                            <label for="editPhone" style="display:block; margin-bottom:4px;">Mobile</label>
+                            <input id="editPhone" type="tel" pattern="[0-9]{10,15}" maxlength="15" style="width:100%;padding:8px;">
+                        </div>
+                        <div style="display:flex; gap:12px; justify-content:center;">
+                            <button id="saveProfileBtn" type="submit" class="primary-btn" style="flex:1;">Save</button>
+                            <button id="closeEditProfileModal" type="button" class="secondary-btn" style="flex:1;">Cancel</button>
+                        </div>
+                    </form>
                 </div>
             </div>
 
@@ -126,103 +183,123 @@
                 </div>
             </div>
 
-            <!-- Claim Reward Modal -->
+            <!-- Optimized Congratulations & Claim Reward Modal -->
             <div id="rewardModal" class="modal hidden">
-                <div class="modal-content reward-modal">
-                    <span class="close-modal">&times;</span>
-                    <h2>Congratulations!</h2>
-                    <div id="winningOffer" class="winning-offer">
-                        <p>You won: <span id="offerText"></span></p>
+                <div class="modal-content reward-modal" style="max-width: 400px; margin: 60px auto; padding: 28px 20px;">
+                    <span class="close-modal" style="position:absolute;top:10px;right:16px;font-size:22px;cursor:pointer;">&times;</span>
+                    <div style="text-align:center;">
+                        <h2 style="color:#27ae60;margin-bottom:10px;">🎉 Congratulations!</h2>
+                        <div id="winningOffer" class="winning-offer" style="margin-bottom:18px;">
+                            <p style="font-size:18px;">You won: <span id="offerText" style="font-weight:bold;"></span></p>
+                        </div>
+                        <div class="buttons" style="display:flex;gap:12px;justify-content:center;margin-bottom:18px;">
+                            <button id="claimBtn" class="primary-btn" style="flex:1;">Claim Reward</button>
+                            <button id="spinAgainBtn" class="secondary-btn" style="flex:1;">Spin Again</button>
+                        </div>
+                        <div id="couponCode" class="coupon-code hidden" style="margin-top:18px;">
+                            <h3 style="margin-bottom:8px;">Your Coupon Code</h3>
+                            <div class="code" id="couponValue" style="font-size:22px;letter-spacing:2px;background:#f7f7f7;padding:10px 0;border-radius:6px;margin-bottom:8px;">ABC123XYZ</div>
+                            <p style="font-size:13px;color:#888;">Show this code to claim your reward!</p>
+                        </div>
                     </div>
-                    <div class="buttons">
-                        <button id="claimBtn" class="primary-btn">Claim Reward</button>
-                        <button id="spinAgainBtn" class="secondary-btn">Spin Again</button>
-                    </div>
-                    <div id="couponCode" class="coupon-code hidden">
-                        <h3>Your Coupon Code</h3>
-                        <div class="code" id="couponValue">ABC123XYZ</div>
-                        <p>Show this code to claim your reward!</p>
-                    </div>
+                </div>
+            </div>
+
+            <!-- OTP Verification Modal -->
+            <div id="otpModal" class="modal hidden">
+                <div class="modal-content" style="max-width: 350px; margin: 60px auto; padding: 24px 20px;">
+                    <h2 style="text-align:center; margin-bottom:15px;">Verify Your Number</h2>
+                    <p style="text-align:center; margin-bottom:20px;">An OTP has been sent to your WhatsApp number <strong id="otpPhoneDisplay"></strong></p>
+                    
+                    <form id="otpForm" autocomplete="off">
+                        <div style="margin-bottom:20px; text-align:center;">
+                            <input id="otpInput" type="text" maxlength="4" pattern="[0-9]{4}" placeholder="Enter 4-digit OTP" 
+                                   style="width:120px; text-align:center; letter-spacing:5px; font-size:18px; padding:10px;" 
+                                   required>
+                        </div>
+                        
+                        <div style="display:flex; gap:12px; justify-content:center; margin-bottom:10px;">
+                            <button id="verifyOTPBtn" type="submit" class="primary-btn" style="flex:1;">Verify OTP</button>
+                            <button id="closeOTPModal" type="button" class="secondary-btn" style="flex:1;">Cancel</button>
+                        </div>
+                        
+                        <div style="text-align:center; margin-top:15px;">
+                            <p style="font-size:13px; color:#666; margin-bottom:8px;">Didn't receive OTP?</p>
+                            <button id="resendOTPBtn" type="button" style="background:none; border:none; color:#1a73e8; cursor:pointer; font-size:14px;">Resend OTP</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Initialize global Firebase mock
-        window.firebaseAuth = {
-            signInWithEmailAndPassword: function(email, password) {
-                return new Promise((resolve, reject) => {
-                    // Check in localStorage for user
+        // Simple direct authentication implementation
+        console.log("Initializing simple authentication system");
+        
+        // Rename functions to avoid naming conflicts with app.js
+        window.authenticateUser = function(email, password) {
+            return new Promise((resolve, reject) => {
+                // Simple authentication directly with localStorage
+                try {
                     const users = JSON.parse(localStorage.getItem('users') || '{}');
-                    const user = users[email];
+                    console.log("Users in storage:", Object.keys(users));
                     
-                    if (user && user.password === password) {
-                        resolve({ 
-                            user: { 
-                                uid: user.uid || email.replace(/[^a-z0-9]/gi, ''),
-                                email: email,
-                                displayName: user.name
-                            } 
-                        });
+                    if (users[email] && users[email].password === password) {
+                        resolve(users[email]);
                     } else {
                         reject(new Error('Invalid email or password'));
                     }
-                });
-            },
-            createUserWithEmailAndPassword: function(email, password) {
-                return new Promise((resolve, reject) => {
-                    // Check if user exists
+                } catch (error) {
+                    console.error("Login error:", error);
+                    reject(error);
+                }
+            });
+        };
+        
+        window.createNewUser = function(name, email, password, phone) {
+            return new Promise((resolve, reject) => {
+                try {
+                    // Get existing users or create empty object
                     const users = JSON.parse(localStorage.getItem('users') || '{}');
                     
+                    // Check if user exists
                     if (users[email]) {
                         reject(new Error('User already exists'));
                         return;
                     }
                     
-                    // Create user ID
-                    const uid = 'user_' + Date.now() + Math.random().toString(36).substring(2, 9);
+                    // Generate unique ID
+                    const uid = 'user_' + Date.now() + Math.random().toString(36).substring(2);
                     
-                    resolve({ 
-                        user: { 
-                            uid: uid,
-                            email: email,
-                            displayName: null,
-                            updateProfile: function(data) {
-                                return Promise.resolve();
-                            }
-                        } 
-                    });
+                    // Create new user
+                    const newUser = {
+                        uid: uid,
+                        email: email,
+                        name: name,
+                        phone: phone,
+                        password: password // In a real app, never store raw passwords
+                    };
                     
-                    // Don't actually store the user here - that happens in app.js
-                });
-            },
-            onAuthStateChanged: function(callback) {
-                // Get current user from localStorage
-                const currentUser = localStorage.getItem('currentUser');
-                if (currentUser) {
-                    try {
-                        const user = JSON.parse(currentUser);
-                        callback({ 
-                            uid: user.uid,
-                            email: user.email,
-                            displayName: user.name
-                        });
-                    } catch (e) {
-                        callback(null);
-                    }
-                } else {
-                    callback(null);
+                    // Save to localStorage
+                    users[email] = newUser;
+                    localStorage.setItem('users', JSON.stringify(users));
+                    
+                    console.log("User created successfully:", email);
+                    console.log("Users in storage after signup:", Object.keys(users));
+                    
+                    resolve(newUser);
+                } catch (error) {
+                    console.error("Signup error:", error);
+                    reject(error);
                 }
-                return function() {}; // Unsubscribe function
-            },
-            signOut: function() {
-                return Promise.resolve();
-            }
+            });
         };
-        console.log("Firebase authentication mock initialized");
     </script>
     
-    <script src="app.js"></script>
+    <!-- Use type="module" for ES modules -->
+    <script type="module" src="js/apiClient.js"></script>
+    <script type="module" src="js/userDashboard.js"></script>
+    <script type="module" src="js/app.js"></script>
 </body>
 </html>

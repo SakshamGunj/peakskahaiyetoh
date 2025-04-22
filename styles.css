@@ -484,6 +484,57 @@ main {
     box-shadow: 0 0 8px rgba(254, 202, 87, 0.8);
 }
 
+/* OTP Input Styling */
+#otpInput {
+    font-family: monospace;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+#otpInput:focus {
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    outline: none;
+}
+
+/* Make the OTP form more prominent */
+.otp-container {
+    margin: 20px 0;
+    text-align: center;
+}
+
+/* Add an animated loading effect for sending/verifying */
+.loading-btn {
+    position: relative;
+    pointer-events: none;
+}
+
+.loading-btn::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+    border: 4px solid transparent;
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: btn-loading-spinner 1s ease infinite;
+}
+
+@keyframes btn-loading-spinner {
+    from {
+        transform: rotate(0turn);
+    }
+    to {
+        transform: rotate(1turn);
+    }
+}
+
 /* Dashboard */
 .dashboard {
     position: fixed;
