@@ -462,8 +462,8 @@ function setupEventListeners() {
         $('#welcomeScreen').classList.add('hidden');
         $('#mainContent').classList.remove('hidden');
         
-        // Update API endpoint from localhost:8000 to the new server
-        fetch('http://35.200.227.36:8069/')
+        // Update to use HTTPS
+        fetch('https://web-production-66c07.up.railway.app/')
             .then(response => {
                 console.log('🌐 API Response Status:', response.status, response.statusText);
                 return response.text();
@@ -474,7 +474,7 @@ function setupEventListeners() {
             })
             .catch(error => {
                 console.error('🌐 API Error from API server:', error);
-                console.log('Make sure your backend server is running');
+                console.log('Make sure your backend server is running with HTTPS enabled');
             });
     });
     

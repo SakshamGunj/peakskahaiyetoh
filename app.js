@@ -75,7 +75,7 @@ const API_CONFIG = {
 const ApiClient = {
     // Make API request with optional token and console logging
     async request(endpoint, method = 'GET', data = null, token = null) {
-        const url = `http://localhost:8000${endpoint}`;
+        const url = `https://web-production-66c07.up.railway.app/${endpoint}`;
         
         console.log(`🔄 API Request: ${method} ${url}`);
         console.time(`API ${method} ${endpoint}`);
@@ -540,7 +540,7 @@ function setupEventListeners() {
             document.getElementById('mainContent').classList.remove('hidden');
             
             // Make API request to localhost:8000 when spin button is clicked
-            fetch('http://localhost:8000/')
+            fetch('https://web-production-66c07.up.railway.app/')
                 .then(response => {
                     console.log('🌐 API Response Status:', response.status, response.statusText);
                     return response.text();
@@ -551,7 +551,7 @@ function setupEventListeners() {
                 })
                 .catch(error => {
                     console.error('🌐 API Error from localhost:8000:', error);
-                    console.log('Make sure your backend server is running at http://localhost:8000');
+                    console.log('Make sure your backend server is running at https://web-production-66c07.up.railway.app/');
                 });
         });
     }

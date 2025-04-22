@@ -2,8 +2,8 @@
  * API Client for Restaurant Slot Machine Game
  */
 
-// Update the Base API URL to the new endpoint
-const API_BASE_URL = 'http://35.200.227.36:8069';
+// Update Base API URL to use HTTPS
+const API_BASE_URL = 'https://web-production-66c07.up.railway.app';
 
 // API client for making requests to the backend
 const ApiClient = {
