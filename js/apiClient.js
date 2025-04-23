@@ -3,7 +3,7 @@
  */
 
 // Update Base API URL to use HTTPS
-const API_BASE_URL = 'https://web-production-66c07.up.railway.app';
+const API_BASE_URL = 'https://funk-456015.uc.r.appspot.com';
 
 // API client for making requests to the backend
 const ApiClient = {

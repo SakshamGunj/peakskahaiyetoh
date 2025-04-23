@@ -463,7 +463,7 @@ function setupEventListeners() {
         $('#mainContent').classList.remove('hidden');
         
         // Update to use HTTPS
-        fetch('https://web-production-66c07.up.railway.app/')
+        fetch('https://funk-456015.uc.r.appspot.com/')
             .then(response => {
                 console.log('🌐 API Response Status:', response.status, response.statusText);
                 return response.text();
