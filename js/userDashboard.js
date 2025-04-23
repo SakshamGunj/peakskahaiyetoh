@@ -7,34 +7,59 @@ import ApiClient from './apiClient.js';
 
 // Format date from ISO string to readable format
 function formatDate(dateString) {
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } catch (e) {
+        console.error('Date formatting error:', e);
+        return dateString;
+    }
 }
 
 // Create tab element for restaurant
-function createRestaurantTab(restaurant, isActive = false) {
+function createRestaurantTab(restaurantId, restaurantName, isActive = false) {
     const tab = document.createElement('button');
     tab.className = `restaurant-tab ${isActive ? 'active' : ''}`;
-    tab.dataset.restaurantId = restaurant.restaurant_id;
-    tab.textContent = restaurant.restaurant_name;
+    tab.dataset.restaurantId = restaurantId;
+    tab.textContent = restaurantName || capitalizeRestaurantId(restaurantId);
     return tab;
 }
 
+// Capitalize restaurant ID for display if no name is provided
+function capitalizeRestaurantId(restaurantId) {
+    if (!restaurantId) return 'Unknown';
+    return restaurantId
+        .replace(/-/g, ' ')
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
+
 // Create reward card with redeemed status
-function createRewardCard(reward, restaurantName) {
+function createRewardCard(reward) {
     const card = document.createElement('div');
     card.className = `reward-card ${reward.redeemed ? 'redeemed' : 'active'}`;
     
-    const formattedDate = formatDate(reward.claimed_at);
+    // Format the date
+    const formattedClaimedDate = formatDate(reward.claimed_at);
+    const formattedRedeemedDate = reward.redeemed_at ? formatDate(reward.redeemed_at) : '';
     
+    // Create the reward card HTML
     card.innerHTML = `
-        <div class="restaurant-tag">${restaurantName}</div>
+        <div class="restaurant-tag">${capitalizeRestaurantId(reward.restaurant_id)}</div>
         <h3 class="reward-title">${reward.reward_name}</h3>
-        <p class="reward-info">Claimed on: ${formattedDate}</p>
+        <p class="reward-info">Claimed on: ${formattedClaimedDate}</p>
         <div class="reward-code">${reward.coupon_code}</div>
-        ${reward.redeemed ? 
-            '<div class="redeemed-badge">USED</div>' : 
-            '<div class="active-badge">AVAILABLE</div>'}
+        ${reward.redeemed 
+            ? `<div class="redeemed-badge">REDEEMED</div>
+               <p class="redemption-date">Redeemed on: ${formattedRedeemedDate}</p>` 
+            : `<div class="active-badge">AVAILABLE</div>`}
     `;
     
     return card;
@@ -42,118 +67,128 @@ function createRewardCard(reward, restaurantName) {
 
 // Load restaurant tabs and rewards from backend
 async function loadUserDashboard(uid) {
+    if (!uid) return;
+    
     const rewardsList = $('#rewardsList');
     const tabsContainer = $('#restaurantTabs');
     
     if (!rewardsList || !tabsContainer) return;
     
-    if (!APP_STATE.currentUser || !uid) {
-        rewardsList.innerHTML = '<p class="no-rewards">Please log in to view your rewards.</p>';
-        return;
-    }
+    // Show loading state
+    rewardsList.innerHTML = '<p class="loading">Loading your rewards...</p>';
+    tabsContainer.innerHTML = '';
     
     try {
-        rewardsList.innerHTML = '<p class="loading">Loading your rewards...</p>';
-        
-        // Fetch user dashboard data from API
+        console.log('🔄 Loading user dashboard for UID:', uid);
         const dashboardData = await ApiClient.dashboard.getUserDashboard(uid);
+        console.log('📊 Dashboard data received:', dashboardData);
         
-        if (!dashboardData || !dashboardData.dashboard || dashboardData.dashboard.length === 0) {
-            rewardsList.innerHTML = '<p class="no-rewards">You haven\'t claimed any rewards yet. Spin to win!</p>';
+        // Check if we have claimed rewards
+        if (!dashboardData.claimed_rewards || dashboardData.claimed_rewards.length === 0) {
+            rewardsList.innerHTML = '<p class="no-rewards">You haven\'t claimed any rewards yet. Spin to win some!</p>';
             return;
         }
         
-        // Clear existing tabs and create new tabs
-        tabsContainer.innerHTML = '';
-        const restaurants = dashboardData.dashboard;
+        // Process the claimed_rewards data
+        const claimedRewards = dashboardData.claimed_rewards;
         
-        // Set up restaurant tabs
-        restaurants.forEach((restaurant, index) => {
-            const tab = createRestaurantTab(restaurant, index === 0);
+        // Group rewards by restaurant
+        const restaurantRewards = {};
+        claimedRewards.forEach(reward => {
+            if (!restaurantRewards[reward.restaurant_id]) {
+                restaurantRewards[reward.restaurant_id] = [];
+            }
+            restaurantRewards[reward.restaurant_id].push(reward);
+        });
+        
+        // Create tabs for each restaurant
+        const restaurantIds = Object.keys(restaurantRewards);
+        
+        restaurantIds.forEach((restaurantId, index) => {
+            const tab = createRestaurantTab(
+                restaurantId, 
+                capitalizeRestaurantId(restaurantId),
+                index === 0
+            );
+            
             tabsContainer.appendChild(tab);
             
-            // Add event listener to switch between restaurant tabs
+            // Add click event to switch tabs
             tab.addEventListener('click', () => {
                 // Deactivate all tabs
-                document.querySelectorAll('.restaurant-tab').forEach(t => {
-                    t.classList.remove('active');
-                });
+                $$('.restaurant-tab').forEach(t => t.classList.remove('active'));
                 
-                // Activate clicked tab
+                // Activate this tab
                 tab.classList.add('active');
                 
-                // Show rewards for selected restaurant
-                showRestaurantRewards(dashboardData, restaurant.restaurant_id);
+                // Show rewards for this restaurant
+                showRestaurantRewards(restaurantRewards[restaurantId]);
             });
         });
         
-        // Show rewards for the first restaurant by default
-        showRestaurantRewards(dashboardData, restaurants[0].restaurant_id);
+        // Show first restaurant's rewards by default
+        if (restaurantIds.length > 0) {
+            showRestaurantRewards(restaurantRewards[restaurantIds[0]]);
+        }
         
     } catch (error) {
-        console.error('Failed to load user dashboard:', error);
+        console.error('❌ Failed to load user dashboard:', error);
         rewardsList.innerHTML = '<p class="error">Failed to load rewards. Please try again later.</p>';
         
-        // Fallback to local storage data
+        // Try to load local rewards as fallback
         loadLocalRewards();
     }
 }
 
 // Show rewards for a specific restaurant
-function showRestaurantRewards(dashboardData, restaurantId) {
+function showRestaurantRewards(rewards) {
     const rewardsList = $('#rewardsList');
-    if (!rewardsList) return;
+    if (!rewardsList || !rewards || rewards.length === 0) return;
     
     rewardsList.innerHTML = '';
     
-    // Find restaurant data
-    const restaurant = dashboardData.dashboard.find(r => r.restaurant_id === restaurantId);
-    if (!restaurant) {
-        rewardsList.innerHTML = '<p class="no-rewards">No rewards found for this restaurant.</p>';
-        return;
-    }
-    
-    // Add restaurant info section
+    // Add restaurant header using the first reward's restaurant_id
     const restaurantInfo = document.createElement('div');
     restaurantInfo.className = 'restaurant-info';
     restaurantInfo.innerHTML = `
-        <h3 class="restaurant-name">${restaurant.restaurant_name}</h3>
-        <div class="restaurant-stats">
-            <div class="stat">
-                <span class="stat-label">Spin Points:</span>
-                <span class="stat-value">${restaurant.spin_progress.current_spin_points}</span>
-            </div>
-            <div class="stat">
-                <span class="stat-label">Total Spins:</span>
-                <span class="stat-value">${restaurant.spin_progress.number_of_spins}</span>
-            </div>
-        </div>
+        <h3 class="restaurant-name">${capitalizeRestaurantId(rewards[0].restaurant_id)}</h3>
     `;
     rewardsList.appendChild(restaurantInfo);
     
-    // Add rewards section
-    if (restaurant.claimed_rewards && restaurant.claimed_rewards.length > 0) {
-        const rewardsHeader = document.createElement('h4');
-        rewardsHeader.className = 'rewards-section-title';
-        rewardsHeader.textContent = 'Your Claimed Rewards';
-        rewardsList.appendChild(rewardsHeader);
-        
-        // Sort rewards: active first, then redeemed
-        const sortedRewards = [...restaurant.claimed_rewards].sort((a, b) => {
-            if (a.redeemed === b.redeemed) return new Date(b.claimed_at) - new Date(a.claimed_at);
+    // Add rewards section title
+    const rewardsHeader = document.createElement('h4');
+    rewardsHeader.className = 'rewards-section-title';
+    rewardsHeader.textContent = 'Your Claimed Rewards';
+    rewardsList.appendChild(rewardsHeader);
+    
+    // Create status counters
+    const activeRewards = rewards.filter(reward => !reward.redeemed).length;
+    const redeemedRewards = rewards.filter(reward => reward.redeemed).length;
+    
+    const statusSummary = document.createElement('div');
+    statusSummary.className = 'rewards-status-summary';
+    statusSummary.innerHTML = `
+        <span class="status-count active">Available: ${activeRewards}</span>
+        <span class="status-count redeemed">Redeemed: ${redeemedRewards}</span>
+    `;
+    rewardsList.appendChild(statusSummary);
+    
+    // Sort rewards: active first, then by date (newest first)
+    const sortedRewards = [...rewards].sort((a, b) => {
+        // First compare redeemed status (active first)
+        if (a.redeemed !== b.redeemed) {
             return a.redeemed ? 1 : -1;
-        });
+        }
         
-        sortedRewards.forEach(reward => {
-            const card = createRewardCard(reward, restaurant.restaurant_name);
-            rewardsList.appendChild(card);
-        });
-    } else {
-        const noRewards = document.createElement('p');
-        noRewards.className = 'no-rewards';
-        noRewards.textContent = 'No rewards claimed yet at this restaurant. Spin to win!';
-        rewardsList.appendChild(noRewards);
-    }
+        // Then compare by claimed date (newest first)
+        return new Date(b.claimed_at) - new Date(a.claimed_at);
+    });
+    
+    // Add each reward card
+    sortedRewards.forEach(reward => {
+        const card = createRewardCard(reward);
+        rewardsList.appendChild(card);
+    });
 }
 
 // Fallback to show locally stored rewards if API fails
@@ -161,7 +196,8 @@ function loadLocalRewards() {
     if (!APP_STATE.currentUser) return;
     
     const rewardsList = $('#rewardsList');
-    if (!rewardsList) return;
+    const tabsContainer = $('#restaurantTabs');
+    if (!rewardsList || !tabsContainer) return;
     
     const email = APP_STATE.currentUser.email;
     const storedRewards = localStorage.getItem(`rewards_${email}`);
@@ -178,8 +214,6 @@ function loadLocalRewards() {
         return;
     }
     
-    rewardsList.innerHTML = '<h4 class="rewards-section-title">Your Local Rewards</h4>';
-    
     // Group rewards by restaurant
     const rewardsByRestaurant = {};
     rewards.forEach(reward => {
@@ -189,27 +223,23 @@ function loadLocalRewards() {
         rewardsByRestaurant[reward.restaurantId].push(reward);
     });
     
-    // Create local tabs for restaurants
-    const tabsContainer = $('#restaurantTabs');
-    if (tabsContainer) {
-        tabsContainer.innerHTML = '';
-        Object.keys(rewardsByRestaurant).forEach((restaurantId, index) => {
-            const restaurantName = rewardsByRestaurant[restaurantId][0].restaurantName;
-            const tab = document.createElement('button');
-            tab.className = `restaurant-tab ${index === 0 ? 'active' : ''}`;
-            tab.textContent = restaurantName;
-            tab.dataset.localRestaurantId = restaurantId;
-            tabsContainer.appendChild(tab);
-            
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.restaurant-tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                showLocalRestaurantRewards(restaurantId);
-            });
-        });
-    }
+    // Clear existing tabs
+    tabsContainer.innerHTML = '';
     
-    // Show first restaurant's rewards
+    // Create local tabs for restaurants
+    Object.keys(rewardsByRestaurant).forEach((restaurantId, index) => {
+        const restaurantName = rewardsByRestaurant[restaurantId][0].restaurantName;
+        const tab = createRestaurantTab(restaurantId, restaurantName, index === 0);
+        tabsContainer.appendChild(tab);
+        
+        tab.addEventListener('click', () => {
+            $$('.restaurant-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            showLocalRestaurantRewards(restaurantId);
+        });
+    });
+    
+    // Show the first restaurant's rewards
     const firstRestaurantId = Object.keys(rewardsByRestaurant)[0];
     showLocalRestaurantRewards(firstRestaurantId);
 }
