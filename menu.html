@@ -22,6 +22,7 @@
         </div>
         <div class="header-icons">
             <i class="fas fa-bell notification-icon"></i> <!-- Added class for potential animation -->
+            <i class="fas fa-clipboard-list" id="order-dashboard-button"></i>
         </div>
     </header>
 
@@ -787,6 +788,98 @@
     </main>
 
     <!-- Simulated Bottom Navigation -->
+
+    <!-- Add this quantity selection modal at the end of the body before closing body tag -->
+    <div id="quantity-modal" class="modal-overlay">
+        <div class="quantity-modal">
+            <div class="modal-header">
+                <h3 id="item-name">Item Name</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="item-details">
+                    <p id="item-description">Item description goes here.</p>
+                    <p class="item-price">Price: ₹<span id="item-price">0</span></p>
+                </div>
+                <div class="quantity-selector">
+                    <button id="decrease-quantity" class="qty-btn">-</button>
+                    <input type="number" id="quantity" value="1" min="1" max="10">
+                    <button id="increase-quantity" class="qty-btn">+</button>
+                </div>
+                <div class="total-section">
+                    <p>Total: ₹<span id="total-price">0</span></p>
+                </div>
+                <div class="special-instructions">
+                    <label for="instructions">Special Instructions:</label>
+                    <textarea id="instructions" placeholder="Any special requests?"></textarea>
+                </div>
+                <button id="add-to-cart" class="primary-btn">Add to Cart</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add cart modal -->
+    <div id="cart-modal" class="modal-overlay">
+        <div class="cart-modal">
+            <div class="modal-header">
+                <h3>Your Order</h3>
+                <span class="close-cart-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="cart-items">
+                    <!-- Cart items will be populated here -->
+                </div>
+                <div class="cart-summary">
+                    <p>Subtotal: ₹<span id="subtotal">0</span></p>
+                    <p>Delivery Fee: ₹<span id="delivery-fee">25</span></p>
+                    <p class="total">Total: ₹<span id="cart-total">0</span></p>
+                </div>
+                <button id="place-order" class="primary-btn">Place Order</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add success modal -->
+    <div id="success-modal" class="modal-overlay">
+        <div class="success-modal">
+            <div class="modal-header">
+                <h3>Order Placed!</h3>
+                <span class="close-success-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <p>Your order has been placed successfully!</p>
+                <p>Order ID: <span id="order-id">123456</span></p>
+                <button id="view-orders" class="secondary-btn">View My Orders</button>
+                <button id="continue-shopping" class="primary-btn">Continue Shopping</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add floating cart button -->
+    <div id="cart-button" class="floating-cart-btn">
+        <i class="fas fa-shopping-cart"></i>
+        <span id="cart-count">0</span>
+    </div>
+
+    <!-- Add Order Dashboard -->
+    <div id="order-dashboard" class="order-dashboard">
+        <div class="dashboard-header">
+            <h2>My Orders</h2>
+            <button id="close-order-dashboard" class="close-btn">×</button>
+        </div>
+        <div class="dashboard-content">
+            <div class="user-info">
+                <h3>Welcome, <span id="dashboard-user-name">User</span>!</h3>
+                <p class="dashboard-subtitle">Here are your recent orders</p>
+            </div>
+            <div id="order-list" class="order-list">
+                <!-- Orders will be populated here -->
+            </div>
+        </div>
+    </div>
 
     <!-- Fix script paths to use absolute URLs -->
     <script src="/menu.js"></script>
