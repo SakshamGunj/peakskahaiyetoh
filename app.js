@@ -30,6 +30,13 @@ const RESTAURANTS = {
             "5% off", "15% Off", "10% off", "Free tea", "Buy 1 Get 1 Free","25% off", "35% Off", "Free Coffee" 
         ]
     },
+    "paddingtoncoffeehouse": {
+        name: "Peaks Kitchen",
+        description: "Experience the authentic taste of Italy with our hand-tossed pizzas, baked in wood-fired ovens and topped with premium ingredients.",
+        offers: [
+            "5% off", "15% Off", "10% off", "Free tea", "Buy 1 Get 1 Free","25% off", "35% Off", "Free Coffee" 
+        ]
+    },
     "sushi-heaven": {
         name: "Sushi Heaven",
         description: "Fresh and authentic Japanese cuisine. Our master chefs prepare the finest sushi rolls and sashimi with locally sourced ingredients.",
