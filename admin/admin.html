@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Admin Dashboard</title>
+    <link rel="stylesheet" href="admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <div id="loading" class="loading-screen">
+            <div class="loading-spinner"></div>
+            <p>Loading Admin Dashboard...</p>
+        </div>
+
+        <div id="content" class="hidden">
+            <header class="admin-header">
+                <div class="logo-container">
+                    <h1 id="restaurantName">Restaurant Admin</h1>
+                </div>
+                <div class="user-container">
+                    <span class="username">Admin</span>
+                    <button id="logoutBtn" class="logout-btn">Logout</button>
+                </div>
+            </header>
+
+            <div class="dashboard-container">
+                <aside class="sidebar">
+                    <nav class="sidebar-nav">
+                        <div class="restaurant-selector">
+                            <label for="restaurantSelect">Restaurant:</label>
+                            <select id="restaurantSelect">
+                                <!-- Will be populated dynamically -->
+                            </select>
+                        </div>
+                        <ul class="nav-items">
+                            <li class="nav-item active" data-tab="dashboard">
+                                <span class="icon">📊</span>Dashboard
+                            </li>
+                            <li class="nav-item" data-tab="coupons">
+                                <span class="icon">🎟️</span>Active Coupons
+                            </li>
+                            <li class="nav-item" data-tab="redeemed">
+                                <span class="icon">✅</span>Redeemed Coupons
+                            </li>
+                            <li class="nav-item" data-tab="messages">
+                                <span class="icon">💬</span>WhatsApp Messages
+                            </li>
+                            <li class="nav-item" data-tab="customers">
+                                <span class="icon">👥</span>Customers
+                            </li>
+                            <li class="nav-item" data-tab="settings">
+                                <span class="icon">⚙️</span>Settings
+                            </li>
+                        </ul>
+                    </nav>
+                </aside>
+
+                <main class="main-content">
+                    <!-- Dashboard Tab -->
+                    <section id="dashboard-tab" class="content-tab active">
+                        <div class="dashboard-header">
+                            <h2>Dashboard Overview</h2>
+                            <div class="date-filter">
+                                <label for="dateRange">Date Range:</label>
+                                <select id="dateRange">
+                                    <option value="today">Today</option>
+                                    <option value="week" selected>This Week</option>
+                                    <option value="month">This Month</option>
+                                    <option value="custom">Custom Range</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="stats-cards">
+                            <div class="stat-card">
+                                <div class="stat-icon">🎟️</div>
+                                <div class="stat-content">
+                                    <h3>Active Coupons</h3>
+                                    <p id="activeCouponsCount">24</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">✅</div>
+                                <div class="stat-content">
+                                    <h3>Redeemed Today</h3>
+                                    <p id="redeemedTodayCount">7</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">👥</div>
+                                <div class="stat-content">
+                                    <h3>Active Users</h3>
+                                    <p id="activeUsersCount">153</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">💰</div>
+                                <div class="stat-content">
+                                    <h3>Sales Impact</h3>
+                                    <p id="salesImpact">$1,245</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="charts-container">
+                            <div class="chart-card">
+                                <h3>Coupon Redemption Trend</h3>
+                                <div class="chart-placeholder">
+                                    <div class="bar-chart">
+                                        <div class="bar" style="height: 60%;" data-value="Mon"></div>
+                                        <div class="bar" style="height: 80%;" data-value="Tue"></div>
+                                        <div class="bar" style="height: 50%;" data-value="Wed"></div>
+                                        <div class="bar" style="height: 70%;" data-value="Thu"></div>
+                                        <div class="bar" style="height: 90%;" data-value="Fri"></div>
+                                        <div class="bar" style="height: 75%;" data-value="Sat"></div>
+                                        <div class="bar" style="height: 40%;" data-value="Sun"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chart-card">
+                                <h3>Popular Rewards</h3>
+                                <div class="chart-placeholder">
+                                    <div class="pie-chart">
+                                        <div class="slice slice1" title="Free Drink (25%)"></div>
+                                        <div class="slice slice2" title="10% Off (30%)"></div>
+                                        <div class="slice slice3" title="Free Appetizer (15%)"></div>
+                                        <div class="slice slice4" title="Buy 1 Get 1 (30%)"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Active Coupons Tab -->
+                    <section id="coupons-tab" class="content-tab">
+                        <div class="tab-header">
+                            <h2>Active Coupons</h2>
+                            <div class="actions">
+                                <div class="search-box">
+                                    <input type="text" id="couponSearch" placeholder="Search coupons or users...">
+                                    <button class="search-btn">🔍</button>
+                                </div>
+                                <button id="refreshCouponsBtn" class="refresh-btn">↻ Refresh</button>
+                            </div>
+                        </div>
+
+                        <div class="table-container">
+                            <table id="couponsTable" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Coupon Code</th>
+                                        <th>Customer</th>
+                                        <th>Phone</th>
+                                        <th>Reward</th>
+                                        <th>Issued Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Will be populated via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="pagination">
+                            <button class="pagination-btn" data-action="prev">Previous</button>
+                            <span class="pagination-info">Page <span id="currentPage">1</span> of <span id="totalPages">5</span></span>
+                            <button class="pagination-btn" data-action="next">Next</button>
+                        </div>
+                    </section>
+
+                    <!-- Redeemed Coupons Tab -->
+                    <section id="redeemed-tab" class="content-tab">
+                        <div class="tab-header">
+                            <h2>Redeemed Coupons</h2>
+                            <div class="actions">
+                                <div class="search-box">
+                                    <input type="text" id="redeemedSearch" placeholder="Search redeemed coupons...">
+                                    <button class="search-btn">🔍</button>
+                                </div>
+                                <div class="date-filter">
+                                    <label for="redeemedDateRange">Filter:</label>
+                                    <select id="redeemedDateRange">
+                                        <option value="today">Today</option>
+                                        <option value="week" selected>This Week</option>
+                                        <option value="month">This Month</option>
+                                        <option value="all">All Time</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-container">
+                            <table id="redeemedTable" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Coupon Code</th>
+                                        <th>Customer</th>
+                                        <th>Phone</th>
+                                        <th>Reward</th>
+                                        <th>Issued Date</th>
+                                        <th>Redeemed Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Will be populated via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="pagination">
+                            <button class="pagination-btn" data-action="prev">Previous</button>
+                            <span class="pagination-info">Page <span id="redeemedCurrentPage">1</span> of <span id="redeemedTotalPages">3</span></span>
+                            <button class="pagination-btn" data-action="next">Next</button>
+                        </div>
+                    </section>
+
+                    <!-- WhatsApp Messages Tab -->
+                    <section id="messages-tab" class="content-tab">
+                        <div class="tab-header">
+                            <h2>WhatsApp Messages</h2>
+                        </div>
+
+                        <div class="messages-container">
+                            <div class="message-composer">
+                                <h3>Compose Message</h3>
+                                <div class="form-group">
+                                    <label for="messageRecipients">Recipients:</label>
+                                    <select id="messageRecipients">
+                                        <option value="all">All Customers</option>
+                                        <option value="active">Customers with Active Coupons</option>
+                                        <option value="redeemed">Customers with Redeemed Coupons</option>
+                                        <option value="select">Select Individual Customers</option>
+                                    </select>
+                                </div>
+                                <div id="individualRecipientsContainer" class="form-group hidden">
+                                    <label for="individualRecipients">Select Customers:</label>
+                                    <div class="recipients-selection">
+                                        <!-- Will be populated via JavaScript -->
+                                        <div class="recipient-checkbox">
+                                            <input type="checkbox" id="recipient1" value="1">
+                                            <label for="recipient1">John Doe (+1234567890)</label>
+                                        </div>
+                                        <div class="recipient-checkbox">
+                                            <input type="checkbox" id="recipient2" value="2">
+                                            <label for="recipient2">Jane Smith (+0987654321)</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="messageTemplate">Message Template:</label>
+                                    <select id="messageTemplate">
+                                        <option value="">-- Select Template --</option>
+                                        <option value="welcome">Welcome Message</option>
+                                        <option value="reminder">Coupon Expiry Reminder</option>
+                                        <option value="thank-you">Thank You for Redeeming</option>
+                                        <option value="special-offer">Special Offer</option>
+                                        <option value="custom">Custom Message</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="messageContent">Message Content:</label>
+                                    <textarea id="messageContent" rows="5" placeholder="Type your message here..."></textarea>
+                                    <div class="message-variables">
+                                        <span class="variable" data-var="{name}">Insert Name</span>
+                                        <span class="variable" data-var="{code}">Insert Coupon</span>
+                                        <span class="variable" data-var="{reward}">Insert Reward</span>
+                                        <span class="variable" data-var="{expiry}">Insert Expiry</span>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button id="previewMessageBtn" class="secondary-btn">Preview</button>
+                                    <button id="sendMessageBtn" class="primary-btn">Send Message</button>
+                                </div>
+                            </div>
+
+                            <div class="message-history">
+                                <h3>Message History</h3>
+                                <div class="message-list">
+                                    <!-- Will be populated via JavaScript -->
+                                    <div class="message-item">
+                                        <div class="message-header">
+                                            <span class="message-date">Today, 2:30 PM</span>
+                                            <span class="message-recipients">15 recipients</span>
+                                        </div>
+                                        <div class="message-body">
+                                            Thank you for visiting us! Your coupon {code} will expire in 3 days. Don't forget to use it!
+                                        </div>
+                                        <div class="message-footer">
+                                            <span class="message-status delivered">Delivered: 15/15</span>
+                                        </div>
+                                    </div>
+                                    <div class="message-item">
+                                        <div class="message-header">
+                                            <span class="message-date">Yesterday, 10:15 AM</span>
+                                            <span class="message-recipients">8 recipients</span>
+                                        </div>
+                                        <div class="message-body">
+                                            Hello {name}, we've missed you! Come back and enjoy a special discount on your next visit.
+                                        </div>
+                                        <div class="message-footer">
+                                            <span class="message-status partial">Delivered: 7/8</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Customers Tab -->
+                    <section id="customers-tab" class="content-tab">
+                        <div class="tab-header">
+                            <h2>Customer Management</h2>
+                            <div class="actions">
+                                <div class="search-box">
+                                    <input type="text" id="customerSearch" placeholder="Search customers...">
+                                    <button class="search-btn">🔍</button>
+                                </div>
+                                <button id="exportCustomersBtn" class="secondary-btn">Export CSV</button>
+                            </div>
+                        </div>
+
+                        <div class="table-container">
+                            <table id="customersTable" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Coupons</th>
+                                        <th>Redeemed</th>
+                                        <th>Last Visit</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Will be populated via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="pagination">
+                            <button class="pagination-btn" data-action="prev">Previous</button>
+                            <span class="pagination-info">Page <span id="customersCurrentPage">1</span> of <span id="customersTotalPages">4</span></span>
+                            <button class="pagination-btn" data-action="next">Next</button>
+                        </div>
+                    </section>
+
+                    <!-- Settings Tab -->
+                    <section id="settings-tab" class="content-tab">
+                        <div class="tab-header">
+                            <h2>Admin Settings</h2>
+                        </div>
+
+                        <div class="settings-container">
+                            <div class="settings-card">
+                                <h3>Restaurant Information</h3>
+                                <div class="form-group">
+                                    <label for="settingsRestaurantName">Restaurant Name:</label>
+                                    <input type="text" id="settingsRestaurantName">
+                                </div>
+                                <div class="form-group">
+                                    <label for="settingsRestaurantDescription">Description:</label>
+                                    <textarea id="settingsRestaurantDescription" rows="3"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="settingsRestaurantAddress">Address:</label>
+                                    <textarea id="settingsRestaurantAddress" rows="2"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="settingsRestaurantPhone">Contact Phone:</label>
+                                    <input type="tel" id="settingsRestaurantPhone">
+                                </div>
+                                <button class="primary-btn">Save Changes</button>
+                            </div>
+
+                            <div class="settings-card">
+                                <h3>Offers & Rewards</h3>
+                                <div class="form-group">
+                                    <label>Available Offers:</label>
+                                    <div id="offersList" class="offers-list">
+                                        <!-- Will be populated via JavaScript -->
+                                        <div class="offer-item">
+                                            <input type="text" value="Free Coffee">
+                                            <button class="delete-btn">❌</button>
+                                        </div>
+                                        <div class="offer-item">
+                                            <input type="text" value="10% Off">
+                                            <button class="delete-btn">❌</button>
+                                        </div>
+                                    </div>
+                                    <div class="form-actions">
+                                        <button id="addOfferBtn" class="secondary-btn">Add Offer</button>
+                                    </div>
+                                </div>
+                                <button class="primary-btn">Save Changes</button>
+                            </div>
+
+                            <div class="settings-card">
+                                <h3>Admin Account</h3>
+                                <div class="form-group">
+                                    <label for="adminEmail">Email:</label>
+                                    <input type="email" id="adminEmail">
+                                </div>
+                                <div class="form-group">
+                                    <label for="adminCurrentPassword">Current Password:</label>
+                                    <input type="password" id="adminCurrentPassword">
+                                </div>
+                                <div class="form-group">
+                                    <label for="adminNewPassword">New Password:</label>
+                                    <input type="password" id="adminNewPassword">
+                                </div>
+                                <div class="form-group">
+                                    <label for="adminConfirmPassword">Confirm Password:</label>
+                                    <input type="password" id="adminConfirmPassword">
+                                </div>
+                                <button class="primary-btn">Update Password</button>
+                            </div>
+                        </div>
+                    </section>
+                </main>
+            </div>
+        </div>
+
+        <!-- Modals -->
+        <div id="redeemCouponModal" class="modal hidden">
+            <div class="modal-content">
+                <h2>Redeem Coupon</h2>
+                <div class="coupon-details">
+                    <div class="form-group">
+                        <label>Coupon Code:</label>
+                        <p id="redeemCouponCode" class="highlight">ABC123XYZ</p>
+                    </div>
+                    <div class="form-group">
+                        <label>Reward:</label>
+                        <p id="redeemCouponReward">Free Coffee</p>
+                    </div>
+                    <div class="form-group">
+                        <label>Customer:</label>
+                        <p id="redeemCouponCustomer">John Doe</p>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone:</label>
+                        <p id="redeemCouponPhone">+1234567890</p>
+                    </div>
+                </div>
+                <div class="confirmation-box">
+                    <input type="checkbox" id="redeemConfirmation">
+                    <label for="redeemConfirmation">I confirm that the customer has presented this coupon and is entitled to receive the reward.</label>
+                </div>
+                <div class="modal-actions">
+                    <button id="cancelRedeemBtn" class="secondary-btn">Cancel</button>
+                    <button id="confirmRedeemBtn" class="primary-btn" disabled>Redeem Coupon</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="messagePreviewModal" class="modal hidden">
+            <div class="modal-content">
+                <h2>Message Preview</h2>
+                <div class="preview-details">
+                    <div class="form-group">
+                        <label>Recipients:</label>
+                        <p id="previewRecipients">15 customers</p>
+                    </div>
+                    <div class="form-group">
+                        <label>Message:</label>
+                        <div id="previewMessageContent" class="preview-message">
+                            Hello {name}, thank you for visiting us! Your coupon {code} for {reward} will expire on {expiry}.
+                        </div>
+                    </div>
+                    <div class="preview-examples">
+                        <h3>Sample Messages:</h3>
+                        <div class="preview-example">
+                            <p><strong>To:</strong> John Doe (+1234567890)</p>
+                            <p><strong>Message:</strong> Hello John, thank you for visiting us! Your coupon ABC123 for Free Coffee will expire on May 31, 2023.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button id="cancelPreviewBtn" class="secondary-btn">Edit Message</button>
+                    <button id="sendFromPreviewBtn" class="primary-btn">Send Message</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="admin.js"></script>
+</body>
+</html> 

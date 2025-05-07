@@ -31,7 +31,7 @@ const RESTAURANTS = {
         ]
     },
     "paddingtoncoffeehouse": {
-        name: "Peaks Kitchen",
+        name: "Paddington Coffee House",
         description: "Experience the authentic taste of Italy with our hand-tossed pizzas, baked in wood-fired ovens and topped with premium ingredients.",
         offers: [
             "5% off", "15% Off", "10% off", "Free tea", "Buy 1 Get 1 Free","25% off", "35% Off", "Free Coffee" 
@@ -220,60 +220,72 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Initialize application based on current URL
 function initApp() {
-    // Set default restaurant to "peakskitchen"
-    const defaultRestaurantId = "peakskitchen";
-    
     // Extract restaurant ID from URL - support both direct paths and hash-based routes
     const path = window.location.pathname;
     const hash = window.location.hash.substring(2); // Remove the #/ prefix
     let restaurantId = '';
     
+    console.log("Path:", path);
+    console.log("Hash:", hash);
+    
+    // Case 1: We have a hash-based restaurant ID
     if (hash && RESTAURANTS[hash]) {
-        // Hash-based routing: /#/restaurant-id
         restaurantId = hash;
-    } else {
-        // Direct path routing: /restaurant-id
-        // Extract the last segment of the path and remove any trailing slash
+        console.log(`Using restaurant from hash: ${restaurantId}`);
+    } 
+    // Case 2: We have a path-based restaurant ID
+    else {
         const pathSegments = path.split('/').filter(segment => segment.length > 0);
         const lastSegment = pathSegments.length > 0 ? pathSegments[pathSegments.length - 1] : '';
         
         if (lastSegment && RESTAURANTS[lastSegment]) {
             restaurantId = lastSegment;
+            console.log(`Using restaurant from path: ${restaurantId}`);
+            
+            // Important: DO NOT modify the URL, just use the restaurant from the path
         }
     }
     
-    console.log("Path:", path);
-    console.log("Hash:", hash);
-    console.log("Resolved Restaurant ID:", restaurantId);
+    console.log("Final Resolved Restaurant ID:", restaurantId);
     
     if (restaurantId && RESTAURANTS[restaurantId]) {
+        // Set the current restaurant without changing the URL
         APP_STATE.currentRestaurant = {
             id: restaurantId,
             ...RESTAURANTS[restaurantId]
         };
     } else {
-        // Default to peakskitchen
+        // Only if no valid restaurant is found, default to peakskitchen
+        const defaultRestaurantId = "peakskitchen";
         APP_STATE.currentRestaurant = {
             id: defaultRestaurantId,
             ...RESTAURANTS[defaultRestaurantId]
         };
         
-        // Update URL for proper routing
-        const newPath = `#/${defaultRestaurantId}`;
-        window.history.pushState({}, '', newPath);
+        // Only update URL if we had no valid restaurant ID
+        if (!restaurantId) {
+            const newPath = `#/${defaultRestaurantId}`;
+            window.history.pushState({}, '', newPath);
+        }
     }
     
     loadRestaurantData();
-    
-    // Check if user is already logged in
     checkLoginStatus();
-    
-    // Set up dashboard
     setupDashboardEventListeners();
 }
 
+// Modify the hashchange listener to only reload the page if the restaurant actually changes
 window.addEventListener('hashchange', function() {
-    window.location.reload();
+    const newHash = window.location.hash.substring(2);
+    const currentRestaurantId = APP_STATE.currentRestaurant?.id;
+    
+    // Only reload if the restaurant has actually changed
+    if (newHash && RESTAURANTS[newHash] && newHash !== currentRestaurantId) {
+        console.log(`Restaurant changed from ${currentRestaurantId} to ${newHash}, reloading...`);
+        window.location.reload();
+    } else {
+        console.log(`Hash changed but restaurant is the same or invalid, not reloading.`);
+    }
 });
 
 // Load the restaurant data into the UI

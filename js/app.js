@@ -181,6 +181,20 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
 });
 
+// Add hashchange event listener to handle restaurant changes via hash
+window.addEventListener('hashchange', function() {
+    const newHash = window.location.hash.substring(2);
+    const currentRestaurantId = APP_STATE.currentRestaurant?.id;
+    
+    // Only reload if the restaurant has actually changed
+    if (newHash && RESTAURANTS[newHash] && newHash !== currentRestaurantId) {
+        console.log(`Restaurant changed from ${currentRestaurantId} to ${newHash}, reloading...`);
+        window.location.reload();
+    } else {
+        console.log(`Hash changed but restaurant is the same or invalid, not reloading.`);
+    }
+});
+
 // Load our restaurants database
 const RESTAURANTS = {
     "awesome-burgers": {
@@ -204,31 +218,63 @@ const RESTAURANTS = {
         offers: [
             "5% off", "15% Off", "10% off", "Free tea", "Buy 1 Get 1 Free", "25% off", "35% Off", "Free Coffee" 
         ]
-    }
+    },
+    "sushi-heaven": {
+        name: "Sushi Heaven",
+        description: "Fresh and authentic Japanese cuisine. Our master chefs prepare the finest sushi rolls and sashimi with locally sourced ingredients.",
+        offers: [
+            "Free Roll", "20% Off", "Free Miso Soup", "Free Green Tea", "Buy 1 Get 1 Free", 
+            "15% Off", "Free Dessert", "Free Edamame", "30% Off Party Platter"
+        ]
+    },
+    "paddingtoncoffeehouse": {
+        name: "Paddington Coffee House",
+        description: "Experience the authentic taste of Food and Drinks at Paddington Coffee House",
+        offers: [
+            "5% off", "15% Off", "10% off", "Free tea", "Buy 1 Get 1 Free","25% off", "35% Off", "Free Coffee" 
+        ]
+    },
 };
 
 // Initialize application based on current URL
 function initApp() {
-    // Set default restaurant to "peakskitchen"
-    const defaultRestaurantId = "peakskitchen";
-    
     // Extract restaurant ID from URL - support both direct paths and hash-based routes
     const path = window.location.pathname;
     const hash = window.location.hash.substring(2); // Remove the #/ prefix
     let restaurantId = '';
     
+    console.log("Path:", path);
+    console.log("Hash:", hash);
+    
+    // Case 1: We have a hash-based restaurant ID
     if (hash && RESTAURANTS[hash]) {
-        // Hash-based routing: /#/restaurant-id
         restaurantId = hash;
-    } else {
-        // Direct path routing: /restaurant-id
+        console.log(`Using restaurant from hash: ${restaurantId}`);
+    } 
+    // Case 2: We have a path-based restaurant ID
+    else {
         const pathSegments = path.split('/').filter(segment => segment.length > 0);
         const lastSegment = pathSegments.length > 0 ? pathSegments[pathSegments.length - 1] : '';
         
         if (lastSegment && RESTAURANTS[lastSegment]) {
             restaurantId = lastSegment;
+            console.log(`Using restaurant from path: ${restaurantId}`);
+            
+            // Important: DO NOT modify the URL when using a path-based restaurant ID
+            APP_STATE.currentRestaurant = {
+                id: restaurantId,
+                ...RESTAURANTS[restaurantId]
+            };
+            
+            // Load data without changing URL
+            loadRestaurantData();
+            checkLoginStatus();
+            updateSpinStatsUI();
+            return;
         }
     }
+    
+    console.log("Final Resolved Restaurant ID:", restaurantId);
     
     if (restaurantId && RESTAURANTS[restaurantId]) {
         APP_STATE.currentRestaurant = {
@@ -236,13 +282,14 @@ function initApp() {
             ...RESTAURANTS[restaurantId]
         };
     } else {
-        // Default to peakskitchen
+        // Only if no valid restaurant is found, default to peakskitchen
+        const defaultRestaurantId = "peakskitchen";
         APP_STATE.currentRestaurant = {
             id: defaultRestaurantId,
             ...RESTAURANTS[defaultRestaurantId]
         };
         
-        // Update URL for proper routing
+        // Only update URL if we had no valid restaurant ID
         const newPath = `#/${defaultRestaurantId}`;
         window.history.pushState({}, '', newPath);
     }

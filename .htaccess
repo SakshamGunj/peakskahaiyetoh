@@ -7,3 +7,16 @@
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule . /index.html [L]
 </IfModule>
+
+# Rewrite rules to handle routing
+RewriteEngine On
+
+# Redirect /admin to /admin/admin.html
+RewriteRule ^admin$ /admin/admin.html [L]
+
+# If the file exists, serve it directly
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# For all other paths, try to serve the HTML file
+RewriteRule ^([^/]+)/?$ $1.html [L]
