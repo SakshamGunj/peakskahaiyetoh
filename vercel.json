@@ -1,12 +1,14 @@
 {
   "version": 2,
   "public": true,
+  "redirects": [
+    { "source": "/peakskitchen", "destination": "https://pos.tenversemedia.tech.mount", "permanent": false }
+  ],
   "rewrites": [
     { "source": "/menu.html", "destination": "/menu.html" },
     { "source": "/styles.css", "destination": "/styles.css" },
     { "source": "/app.js", "destination": "/app.js" },
     { "source": "/menu.js", "destination": "/menu.js" },
-    { "source": "/peakskitchen", "destination": "/" },
     { "source": "/awesome-burgers", "destination": "/" },
     { "source": "/pizza-palace", "destination": "/" },
     { "source": "/sushi-heaven", "destination": "/" },
