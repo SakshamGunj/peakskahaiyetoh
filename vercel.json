@@ -2,7 +2,8 @@
   "version": 2,
   "public": true,
   "redirects": [
-    { "source": "/peakskitchen", "destination": "https://pos.tenversemedia.tech.mount", "permanent": false }
+    { "source": "/peakskitchen", "destination": "https://pos.tenversemedia.tech/peakskitchen/spin-wheel", "permanent": false },
+    { "source": "/funkymonkey", "destination": "https://pos.tenversemedia.tech/funkeymonkey/spin-wheel", "permanent": false }
   ],
   "rewrites": [
     { "source": "/menu.html", "destination": "/menu.html" },
