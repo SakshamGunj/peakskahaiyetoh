@@ -3,8 +3,8 @@
   "public": true,
   "redirects": [
     { "source": "/peakskitchen", "destination": "https://pos.tenversemedia.tech/peakskitchen/spin-wheel", "permanent": false },
-    { "source": "/fonkymonkey", "destination": "https://pos.tenversemedia.tech/funkeymonkey/spin-wheel", "permanent": false },
-    { "source": "/fonkymonkey/menu", "destination": "https://pos.tenversemedia.tech/funkeymonkey/menu-portal", "permanent": false },
+    { "source": "/fonkymonkey", "destination": "https://pos.tenversemedia.tech/funkymonkey/spin-wheel", "permanent": false },
+    { "source": "/fonkymonkey/menu", "destination": "https://pos.tenversemedia.tech/funkymonkey/menu-portal", "permanent": false },
     { "source": "/paddingtoncoffeehouse", "destination": "https://pos.tenversemedia.tech/paddingtoncoffeehouse", "permanent": false }
   ],
   "rewrites": [
